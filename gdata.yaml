@@ -1,0 +1,89 @@
+#%YAML 1.2
+
+# This file define the parameters of load genomic data
+# 
+# Author: kentnf, kentnf at gmail dot com
+#
+# the field: indicate that fields is required
+# the value: file::value indicate the value is store in file
+
+database: chadom1
+
+organism:
+  genus: genus
+  species: species
+  common_name: my_pet
+  forma: forma
+  subspecies: subspecies
+  subvariety: subvariety
+  variety: variety
+  comment: description of the organism
+
+assembly:
+  name: genome assembly of my pet 
+  description: we use program version x to assembly 100x illumina PE reads, then anchor contigs to genetic map produced by onemap
+  version: version 0.1 
+  workflow: workflow/genomic_assembly.cwl
+  fasta: dataset/test.chr00.fata
+
+annotation:
+  name: gene annotation of my pet 
+  description: the gene were predicted using maker, the lncRNA, miRNA were predicted using program
+  version: version 2
+  workflow: workflow/genomic_annotation.cwl
+  output_gff3: dataset/test.chr00.gff3
+  output_mrna: dataset/test.transcript.fa
+  output_pep: dataset/test.protein.fasta
+  # cds_fasta: pet_cds.fasta
+  
+functional_annotation:
+  blast_nr: 
+    db_name: nr
+    db_version: March 2017 
+    workflow: workflow/genomic_func_anno_diamond.cwl 
+    workflow_version: 0.1
+    input: dataset/test.protein.fasta
+    output: dataset/test_nr.xml
+  blast_trembl:
+    db_name: TrEMBL
+    db_version: 2018_09
+    workflow: workflow/genomic_func_anno_diamond.cwl
+    workflow_version: 0.1
+    input: dataset/test.protein.fasta
+    output: dataset/test_tr.xml
+  blast_sp:
+    db_name: Swiss-Prot
+    db_version: 2018_09
+    workflow: workflow/genomic_func_anno_diamond.cwl
+    workflow_version: 0.1
+    input: dataset/test.protein.fasta
+    output: dataset/test_sp.xml
+  blast_tair:
+    db_name: TAIR
+    db_version: v10
+    workflow: workflow/genomic_func_anno_diamond.cwl
+    workflow_version: 0.1
+    input: dataset/test.protein.fasta
+    output: dataset/test_at.xml
+  interproscan:
+    db_name: interpro
+    db_version: v70.0
+    workflow: workflow/genomic_func_anno_interpro.cwl
+    workflow_version: 0.1
+    input: dataset/test.protein.fasta
+    output: dataset/test_interpro.xml
+#  -
+#    db_name: ~
+#    db_version: ~
+#    workflow: workflow/genomic_func_anno_blast2go.cwl
+#    workflow_version: 0.1
+#    input: dataset/CM4.0_protein.fasta
+#    output: dataset/melon_v4_gene.gaf 
+  ahrd:
+    db_name: ~
+    db_version: ~ 
+    workflow: workflow/genomic_func_anno_ahrd.cwl
+    workflow_version: 0.1
+    input: dataset/test.protein.fasta
+    output: dataset/test_ahrd.tab
+

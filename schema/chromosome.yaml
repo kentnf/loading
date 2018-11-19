@@ -1,0 +1,33 @@
+#%YAML 1.2
+
+# This file define the schema for storing genomic data to mongodb. user can modify this file to store the genomic data as their own wish
+# 
+# Author: kentnf, kentnf at gmail dot com
+# 
+
+# the chromosome features will be insert in to feature collection 
+collection: feature
+type: chromosome
+
+# the saving order, 31 is after insertion of assembly and gene annotation to analysis collection, 
+#  before insertion of genes and mRNAs
+order: 31
+
+# the chromosomes will be retrieved from annotation::output_gff3 to store in a list
+list_file: annotation::output_gff3
+feature_type: chromosome
+
+# mapping key is used to get document id to create relationship between documents, this key is just for list document 
+mapping_key: name
+
+# for each list includes below fields 
+fields: 
+  name: list:::name
+  type: list:::type
+  organism:
+    _id: self:::organism::_id
+    name: self:::organism::common_name  
+  analysis:
+    assembly:
+      _id: self:::assembly::_id
+      name: self:::assembly::name

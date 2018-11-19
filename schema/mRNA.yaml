@@ -1,0 +1,59 @@
+#%YAML 1.2
+
+# This file define the schema for storing genomic data to mongodb. user can modify this file to store the genomic data as their own wish
+# 
+# Author: kentnf, kentnf at gmail dot com
+# 
+collection: feature
+type: mRNA
+order: 33
+
+list_file: annotation::output_gff3
+other_files:
+  mrna_seq: annotation::output_mrna
+  pep_seq: annotation::output_pep
+  blast_nr: functional_annotation::blast_nr::output
+  blast_trembl: functional_annotation::blast_trembl::output
+  blast_sp: functional_annotation::blast_sp::output
+  blast_tair: functional_annotation::blast_tair::output
+  interproscan: functional_annotation::interproscan::output 
+  ahrd: functional_annotation::ahrd::output
+
+feature_type: mRNA
+
+# mapping key is used to get document id to create relationship between documents, this key is just for list document
+mapping_key: name
+
+fields:
+  name: list:::name
+  loc: list:::loc
+  residues: list:::mrna_seq::residues
+  seqlen: list:::mrna_seq::len
+  type: list:::type
+  parent: list:::parent
+  sub_features: list:::sub_features
+  organism: 
+    _id: self:::organism::_id
+    name: self:::organism::common_name
+  protein: list:::pep_seq
+  analysis:
+    assembly: 
+      _id: self:::assembly::_id
+      name: self:::assembly::name
+    annotation: 
+      _id: self:::annotation::_id
+      name: self:::annotation::name
+    blast_nr: list:::blast_nr
+    blast_tair: list:::blast_tair
+    blast_trembl: list:::blast_trembl
+    blast_sp: list:::blast_sp
+
+# mapping is used to mapping stored _id to current document of list
+# the mapping process is happend after store document to list, so the field name use the new name, 
+#  not the old name from list_file
+
+#mapping:
+#  - 
+#    mapping_src: chromosome
+#    mapping_dec: loc::srcfeature_id::_id
+

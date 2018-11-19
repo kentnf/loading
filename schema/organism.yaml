@@ -1,0 +1,23 @@
+#%YAML 1.2
+
+# This file define the schema for storing genomic data to mongodb. user can modify this file to store the genomic data as their own wish
+# 
+# Author: kentnf, kentnf at gmail dot com
+# 
+# collection: 
+# document: 
+# field: 
+# 
+
+collection: organism
+type: organism
+order: 10
+fields: 
+  genus: map:::organism::genus
+  species: map:::organism::species
+  common_name: map:::organism::common_name
+  forma: map:::organism::forma
+  subspecies: map:::organism::subspecies
+  subvariety: map:::organism::subvariety
+  variety: map:::organism::variety
+  comment: map:::organism::comment

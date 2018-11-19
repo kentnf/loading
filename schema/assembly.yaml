@@ -1,0 +1,21 @@
+#%YAML 1.2
+
+# This file define the schema for storing genomic data to mongodb. user can modify this file to store the genomic data as their own wish
+# 
+# Author: kentnf, kentnf at gmail dot com
+# 
+# collection: 
+# document: 
+# field: 
+# 
+
+collection: 'analysis'
+type: assembly
+order: 20
+fields:
+  name: map:::assembly::name 
+  description: map:::assembly::description
+  version: map:::assembly::version
+  workflow: file:::assembly::workflow
+  fasta: map:::assembly::fasta
+  organism: self:::organism::_id
