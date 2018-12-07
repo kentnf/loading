@@ -18,6 +18,7 @@ other_files:
   blast_tair: functional_annotation::blast_tair::output
   interproscan: functional_annotation::interproscan::output 
   ahrd: functional_annotation::ahrd::output
+  go: functional_annotation::go::output,key=1
 
 feature_type: mRNA
 
@@ -47,6 +48,9 @@ fields:
     blast_tair: list:::blast_tair
     blast_trembl: list:::blast_trembl
     blast_sp: list:::blast_sp
+    interpro: list:::interproscan
+    description: list:::ahrd::1
+    go: list:::go::4
 
 # mapping is used to mapping stored _id to current document of list
 # the mapping process is happend after store document to list, so the field name use the new name, 

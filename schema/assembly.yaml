@@ -18,4 +18,6 @@ fields:
   version: map:::assembly::version
   workflow: file:::assembly::workflow
   fasta: map:::assembly::fasta
-  organism: self:::organism::_id
+  organism: 
+   _id: self:::organism::_id
+   name: self:::organism::common_name

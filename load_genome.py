@@ -88,6 +88,7 @@ def file_to_list(file, mapid_data, feature_type=''):
 
     elif (ftype == '.tab'):
         tab_dict = tab_to_attr(file)
+        print(tab_dict)
         return(tab_dict)
 
     elif (ftype == '.fa' or ftype == '.fasta'):
@@ -95,7 +96,7 @@ def file_to_list(file, mapid_data, feature_type=''):
         return(seq_dict)
 
     else:
-        print('[ERR]unsupported file type: %s' % ftype)
+        print('[ERR]unsupported file type: %s' % file)
         sys.exit()
 
 '''
@@ -281,10 +282,16 @@ def data_map_field(dspath, gdata):
     p = dspath.split('::')
     temp = copy.deepcopy(gdata)
     for v in p:
-        if (v in temp):
-            temp = temp[v]
-        else:
-            print('[ERR] %s in path: %s' % (v, dspath))
+        if (isinstance(temp, dict)):
+            if (v in temp):
+                temp = temp[v]
+            else:
+                print('[ERR] %s in path: %s' % (v, dspath))
+                print(temp)
+                sys.exit()
+        elif (isinstance(temp, list)):
+            temp = temp[int(v)-1]
+
     return(temp)
 
 def insert_update(db_name, collection_name, data, query):
@@ -336,7 +343,7 @@ def main(argv):
     # === parse data.yaml ===
     with open('gdata.yaml') as fd:
         gdata = yaml.load(fd)
-        #print(gdata)
+        # print(gdata)
 
     # file_type = {}
     # search_data(gdata, file_type)
@@ -415,14 +422,6 @@ def main(argv):
         # print(store_data[schema['type']])
         if (schema['type'] == 'mRNA'):
            sys.exit()
-    sys.exit()
-
-    # === kentnf: insert transaction end code here ===
-    # with client.start_session() as s:
-    #   s.start_transaction()
-    #    collection_one.insert_one(doc_one, session=s)
-    #    collection_two.insert_one(doc_two, session=s)
-    #   s.commit_transaction()
 
     tdb.logout()
 

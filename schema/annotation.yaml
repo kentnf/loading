@@ -18,5 +18,9 @@ fields:
   version: map:::annotation::version
   workflow: file:::annotation::workflow
   output: map:::annotation::output_gff3
-  assembly: self:::assembly::_id
-  organism: self:::organism::_id
+  organism: 
+    _id: self:::organism::_id
+    name: self:::organism::common_name
+  assembly: 
+    _id: self:::assembly::_id
+    name: self:::assembly::name

@@ -72,13 +72,13 @@ functional_annotation:
     workflow_version: 0.1
     input: dataset/test.protein.fasta
     output: dataset/test_interpro.xml
-#  -
-#    db_name: ~
-#    db_version: ~
-#    workflow: workflow/genomic_func_anno_blast2go.cwl
-#    workflow_version: 0.1
-#    input: dataset/CM4.0_protein.fasta
-#    output: dataset/melon_v4_gene.gaf 
+  go:
+    db_name: ~
+    db_version: ~
+    workflow: workflow/genomic_func_anno_blast2go.cwl
+    workflow_version: 0.1
+    input: dataset/CM4.0_protein.fasta
+    output: dataset/test_mrna.gaf.tab 
   ahrd:
     db_name: ~
     db_version: ~ 
