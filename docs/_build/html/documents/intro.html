@@ -1,0 +1,117 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>What is NoSchema &#8212; noschema 0.01 documentation</title>
+    <link rel="stylesheet" href="../_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+    <script type="text/javascript" src="../_static/jquery.js"></script>
+    <script type="text/javascript" src="../_static/underscore.js"></script>
+    <script type="text/javascript" src="../_static/doctools.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="快速入门" href="quick_start.html" />
+    <link rel="prev" title="Welcome to noschema’s documentation!" href="../index.html" />
+   
+  <link rel="stylesheet" href="../_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <div class="section" id="what-is-noschema">
+<h1>What is NoSchema<a class="headerlink" href="#what-is-noschema" title="Permalink to this headline">¶</a></h1>
+<p>在建立关系数据库之前，首先需要做的事情是充分了解业务模式，然后根据业务模式确定怎样存储数据，这种定存储数据的方式就是Schema。而对于文档数据库而言，一个非常大的优势就是不需要提前建立这种存储数据的schema。并不是说文档据库不需要Schema，而是它的存储数据方式非常的灵活。</p>
+<p>现在我有一个工作，这个工作就是为葫芦科的物种建立一个育种的数据库。这个工作对我来说非常具有挑战性，为什么这么说呢？因为首先我不是一个植物育种的专家，在此之前没有系统学习过有关植物育种的相关课程。目前我所有的数据仅仅是植物的表型和基因型数据。通过搜索网络上的资料，可以通过GWAS（全基因组关联分析）将植物表型和基因型建立起联系，推测导致某个表型所对应的基因型。GWAS的方法被广泛的应用于植物育种中。但是除了GWAS，还有其它的方法将表型和基因型建立联系，例如QTL。而这些仅仅是育种工作中genomic select的一部分。关于育种中实验如何设计，怎样获得这些实验数据，如何分析实验数据并做出选择进行下一轮的实验。对此我了解的非常有限。</p>
+<p>在不了解植物育种这个复杂问题之前，我需要将我们已经获得的表型，基因型数据存入数据库，并使得数据可以浏览，查询。所以选择文档型数据库是最好的解决办法。</p>
+<p>而对于文档型的数据库，例如mongodb，我可以为存储的每一类型数据写一个脚本。例如存储基因型数据，我可以写一个脚本叫做store_genotype_from_VCF.py。但是这并不是一个很好的方法。为了避免不断的去写（维护）各种各样不同的脚本，我把工作简化成写不同配置文件。然后NoSchema诞生了….</p>
+<p>比如我有一个基因需要存储到数据库中</p>
+</div>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="../index.html">noschema</a></h1>
+
+
+
+
+
+
+
+
+<h3>Navigation</h3>
+<p class="caption"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="current reference internal" href="#">What is NoSchema</a></li>
+<li class="toctree-l1"><a class="reference internal" href="quick_start.html">快速入门</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../index.html">Documentation overview</a><ul>
+      <li>Previous: <a href="../index.html" title="previous chapter">Welcome to noschema’s documentation!</a></li>
+      <li>Next: <a href="quick_start.html" title="next chapter">快速入门</a></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2018, kentnf.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.8.2</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
+      
+      |
+      <a href="../_sources/documents/intro.rst.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>
