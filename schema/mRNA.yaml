@@ -18,7 +18,7 @@ other_files:
   blast_tair: functional_annotation::blast_tair::output
   interproscan: functional_annotation::interproscan::output 
   ahrd: functional_annotation::ahrd::output
-  go: functional_annotation::go::output,key=1
+  go: functional_annotation::go::output
 
 feature_type: mRNA
 
@@ -30,19 +30,19 @@ fields:
   loc: list:::loc
   residues: list:::mrna_seq::residues
   seqlen: list:::mrna_seq::len
-  type: list:::type
+  type*: list:::type
   parent: list:::parent
   sub_features: list:::sub_features
-  organism: 
-    _id: self:::organism::_id
+  organism*: 
+    _id*: self:::organism::_id
     name: self:::organism::common_name
   protein: list:::pep_seq
-  analysis:
-    assembly: 
-      _id: self:::assembly::_id
+  analysis*:
+    assembly*: 
+      _id*: self:::assembly::_id
       name: self:::assembly::name
-    annotation: 
-      _id: self:::annotation::_id
+    annotation*: 
+      _id*: self:::annotation::_id
       name: self:::annotation::name
     blast_nr: list:::blast_nr
     blast_tair: list:::blast_tair
@@ -50,7 +50,7 @@ fields:
     blast_sp: list:::blast_sp
     interpro: list:::interproscan
     description: list:::ahrd::1
-    go: list:::go::4
+    go: list:::go
 
 # mapping is used to mapping stored _id to current document of list
 # the mapping process is happend after store document to list, so the field name use the new name, 

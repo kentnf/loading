@@ -13,9 +13,9 @@ collection: organism
 type: organism
 order: 10
 fields: 
-  genus: map:::organism::genus
-  species: map:::organism::species
-  common_name: map:::organism::common_name
+  genus*: map:::organism::genus
+  species*: map:::organism::species
+  common_name*: map:::organism::common_name
   forma: map:::organism::forma
   subspecies: map:::organism::subspecies
   subvariety: map:::organism::subvariety

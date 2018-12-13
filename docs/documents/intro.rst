@@ -12,3 +12,10 @@ What is NoSchema
 
 
 比如我有一个基因需要存储到数据库中
+
+
+
+
+Understand the NoSchema
+=======================
+

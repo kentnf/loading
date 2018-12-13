@@ -15,13 +15,11 @@ pip install elasticsearch
 
 ```
 
-# speed test 
-Load features from GFF file: 13s
-Insert featurs to mongodb: 4s
+# Load data
+ 
 
 
 # design
-
 single document 16M, 
 
 collection: 

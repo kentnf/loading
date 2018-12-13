@@ -7,8 +7,6 @@
 # the field: indicate that fields is required
 # the value: file::value indicate the value is store in file
 
-database: chadom1
-
 organism:
   genus: genus
   species: species
@@ -77,8 +75,8 @@ functional_annotation:
     db_version: ~
     workflow: workflow/genomic_func_anno_blast2go.cwl
     workflow_version: 0.1
-    input: dataset/CM4.0_protein.fasta
-    output: dataset/test_mrna.gaf.tab 
+    input: dataset/test.protein.fasta
+    output: dataset/test_mrna.gaf 
   ahrd:
     db_name: ~
     db_version: ~ 

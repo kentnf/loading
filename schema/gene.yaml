@@ -24,16 +24,16 @@ fields:
   loc: list:::loc
 #  residues: func::output_gff3::get_residues
 #  seqlen: func::output_gff3::get_length
-  type: list:::type
-  organism: 
-    _id: self:::organism::_id
+  type*: list:::type
+  organism*: 
+    _id*: self:::organism::_id
     name: self:::organism::common_name
-  analysis:
-    assembly: 
-      _id: self:::assembly::_id
+  analysis*:
+    assembly*: 
+      _id*: self:::assembly::_id
       name: self:::assembly::name
-    annotation: 
-      _id: self:::annotation::_id
+    annotation*: 
+      _id*: self:::annotation::_id
       name: self:::annotation::name
 
 # mapping is used to mapping stored _id to current document of list

@@ -5,34 +5,36 @@ import sys
 '''
 tab_to_attr -- convert tab delimit file to attr
 '''
-def tab_to_attr(input_file, col=0):
+def gaf_to_attr(input_file):
 	feature_dict = {}
 
 	with open(input_file, 'r+') as fh:
 
+		''' no title of GAF file '''
+		'''
 		first_line = fh.readline()
 		first_line = first_line.strip('\n')
 		title = ()
 		if (first_line[0] == '#'):	
 			title = first_line.split('\t')
-			title.pop(col)
+			title.pop(0)
 		else:
 			m = first_line.split('\t')
-			feature_name = m.pop(col)
+			feature_name = m.pop(0)
 			feature_dict[feature_name] = m
+		'''
 
 		for line in fh:
 			line = line.strip('\n')
 			m = line.split('\t')
-			feature_name = m.pop(col)
+			feature_name = m[1]
+			go = m[4]
 
-
-			if (len(title) > 0):
-				feature_dict[feature_name] = {}
-				for n in range(len(m)):
-					feature_dict[feature_name][title[n]] = m[n]
+			if feature_name in feature_dict:
+				feature_dict[feature_name].append(go)
 			else:
-				feature_dict[feature_name] = m
+				feature_dict[feature_name] = []
+				feature_dict[feature_name].append(go)
 
 	return(feature_dict)
 

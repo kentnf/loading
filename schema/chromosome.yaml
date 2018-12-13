@@ -23,11 +23,11 @@ mapping_key: name
 # for each list includes below fields 
 fields: 
   name: list:::name
-  type: list:::type
-  organism:
-    _id: self:::organism::_id
+  type*: list:::type
+  organism*:
+    _id*: self:::organism::_id
     name: self:::organism::common_name  
-  analysis:
-    assembly:
-      _id: self:::assembly::_id
+  analysis*:
+    assembly*:
+      _id*: self:::assembly::_id
       name: self:::assembly::name

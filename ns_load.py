@@ -2,6 +2,7 @@
 
 import os
 import sys
+import getopt
 import yaml
 import re
 import copy
@@ -16,6 +17,7 @@ import pymongo
 from elasticsearch import Elasticsearch
 
 from nschema import load_schema
+from nschema import format_schema
 
 # import modules for processing features, and functional annotation of features
 from ndocument import Document
@@ -24,9 +26,7 @@ from nfeature import gff3_to_feature
 from nsequence import sequence_to_attr
 from nxml import xml_to_attr
 from ntab import tab_to_attr
-
-def usage():
-    print ("USAGE: %s data.yaml" % (sys.argv[0]))
+from ngaf import gaf_to_attr
 
 '''
 search_data -- traversing the value and retrieve the files
@@ -88,8 +88,13 @@ def file_to_list(file, mapid_data, feature_type=''):
 
     elif (ftype == '.tab'):
         tab_dict = tab_to_attr(file)
-        print(tab_dict)
+        # print(tab_dict)
         return(tab_dict)
+
+    elif (ftype == '.gaf'):
+        gaf_dict = gaf_to_attr(file)
+        # print(gaf_dict)
+        return(gaf_dict)
 
     elif (ftype == '.fa' or ftype == '.fasta'):
         seq_dict = sequence_to_attr(file)
@@ -294,64 +299,188 @@ def data_map_field(dspath, gdata):
 
     return(temp)
 
-def insert_update(db_name, collection_name, data, query):
-    collection = db_name[collection_name]
+'''
+generate_query -- generate query dict for searching the collection
+'''
+def generate_query(data, query_keys):
+    
+    query = {}
 
+    if (isinstance(data,dict)):
+        for search_key in data:
+            if search_key in query_keys:
+                if (isinstance(query_keys[search_key], int)):
+                    query[search_key] = data[search_key]
+                else:
+                    query[search_key] = generate_query(data[search_key], query_keys[search_key])
+    elif (isinstance(data, list)):
+        query = generate_query(data[0], query_keys)
+    else:
+        pass
+
+    return(query)
+
+'''
+convert_nest_query --- convert nest query from dict format to mongdb format: eg
+input  : {a: { b : { c: value } } } 
+output : {a.b.c : value }
+'''
+def convert_nest_query(query, query_format, char):
+
+    for k, v in query.items():
+        newkey = k
+        if (char):
+            newkey = char + '.' + newkey
+            
+        if ( isinstance(v, dict)):
+            convert_nest_query(v, query_format, newkey)
+        elif ( isinstance(v, list)):
+            pass
+            ''' the query usually not have list '''
+        else:
+            query_format[newkey] = v
+
+'''
+sort_list --- sort list with nested dict
+'''
+#def sort_list()
+
+
+'''
+compare_list --- compare two list dataset
+'''
+#def compare_list(list1, list2):
+
+
+
+'''
+insert_update -- insert/update mapped data to database 
+'''
+def insert_update(db_name, collection_name, data, query_keys):
+
+    collection = db_name[collection_name]
+    
     if (isinstance(data, dict)):
-        old_data = collection.find_one(query)
+        ''' generate query data base on search keys, then find the document '''
+        query = generate_query(data, query_keys)
+        query_format = {}
+        convert_nest_query(query, query_format, '')
+        old_data = collection.find_one(query_format)
 
         if (old_data):
             _id = old_data['_id']
-            del(old_data['_id'])
+            del old_data['_id']
 
-            # === fix problem for assembly and annotation ==== 
-            #if ( len(old_data.items() & data.items()) != len(data.items()) ):
-            #	collection.update_one(query, {"$set": data} )
-            #	print("[INFO]update data: %s" % str(data))
-            # add _id to document
+            ''' old data is same as new data, pass '''
+            if (old_data == data):
+                data['_id'] = _id
+                return 1
+
+            ''' update method: replace '''
+            collection.update_one(query_format, { "$set": data } )
+            print("[INFO]replace single: %s" % str(data))
+
+            ''' update method: append '''
+            # print("[INFO]append single: %s" % str(data))
+
+            ''' add _id to document '''
             data['_id'] = _id
+            
         else:
-            _id = collection.insert(data)
+            _id = collection.insert_one(data)
             # add _id to document
             data['_id'] = _id
-            print("[INFO]Insert single document: %s" % str(data))
+            print("[INFO]Insert single: %s" % str(data))
 
     elif (isinstance(data, list)):
-        _id = collection.insert(data)
-        for i in range(len(data)):
-            data[i]['_id'] = _id[i]
+        ''' generate query data base on search keys, then find the document '''
+        query = generate_query(data, query_keys)
+        query_format = {}
+        convert_nest_query(query, query_format, '')
 
-            # print(data[i]['name'],_id[i])
-        print("[INFO]Insert %d documents" % len(data))
+        ''' compare the old_data with data '''
+        old_data = []
+        result = collection.find(query_format)
+        for item in result:
+            old_data.append(item)
+        
+        if (len(old_data)):
 
-'''
-==== main ==== 
-'''
-def main(argv):
-     
-    # === parse parameters ===
-    '''
-    for arg in argv[1:]:
-        if arg == '-h' or arg == '--help':
-            usage()
-            sys.exit()
+            ''' convert feature list to dict using feature name as key. For single organism, the feature name is unique '''
+            old_dict = {}
+            for odata in old_data:
+                old_dict[odata['name']] = odata
+            new_dict = {}
+            for ndata in data:
+                new_dict[ndata['name']] = ndata
+
+            data_with_id = []
+
+            num_rep = 0
+            num_del = 0
+            num_ins = 0
+            num_sam = 0
+
+            for name in old_dict:
+                odoc = old_dict[name]
+                doc_id = odoc['_id']
+
+                if name in new_dict:
+                    ''' 
+                    the old and new doc have same name: 
+                    1. keep the old if the content of doc are same
+                    2. replace the old with new doc if content are diff 
+                    '''
+                    ndoc = new_dict[name]
+                    ndoc['_id'] = doc_id
+                    data_with_id.append(ndoc)
+
+                    if (odoc == ndoc):
+                        ''' 1. delete new doc in dict if same as old '''
+                        num_sam = num_sam + 1
+                    else:
+                        ''' 2. replace old doc with new doc '''
+                        collection.find_one_and_replace( {'_id': doc_id }, ndoc)
+                        num_rep = num_rep + 1
+                    del new_dict[name]
+                else:
+                    ''' delete old document if not exist in new '''
+                    collection.delete_one( {'_id': doc_id } )
+                    num_del = num_del + 1
+
+            ''' insert the new data in list '''
+            for name in new_dict:
+                ndoc = new_dict[name]
+                _id = collection.insert_one(ndoc)
+                ndoc['_id'] = _id
+                data_with_id.append(ndoc)
+                num_ins = num_ins + 1
+
+            ''' report the update(replace) info '''
+            print("[INFO]%s -- Same: %d; Replace: %d; Insert: %d; Delete: %d." % (collection_name, num_sam, num_rep, num_ins, num_del))
         else:
-            print("Error: invalid parameters")
-            sys.exit()
-    '''
+            ''' insert data list'''
+            _id = collection.insert(data)
+            for i in range(len(data)):
+                data[i]['_id'] = _id[i]
+                # print(data[i]['name'],_id[i])
+            print("[INFO]Insert %d documents" % len(data))
+    else:
+        pass
 
+'''
+noschema_insert -- insert/update dataset to mongodb according to noschema schema
+'''
+def noschema_insert(tdb, data_yaml, schema_folder):
+    
     # === parse data.yaml ===
-    with open('gdata.yaml') as fd:
+    with open(data_yaml) as fd:
         gdata = yaml.load(fd)
         # print(gdata)
 
     # file_type = {}
     # search_data(gdata, file_type)
     # print(file_type)
-
-    # === connect to database using the parameters from gdata ===
-    connection = pymongo.MongoClient('127.0.0.1',27017, maxPoolSize=50)
-    tdb = connection[gdata['database']]
 
     # === kentnf: insert transaction start code here ===
     # with client.start_session() as s:
@@ -371,13 +500,14 @@ def main(argv):
 
     # all schemas locate in schema folder are loading to dict, the key is the order of schema
     # next, the schemas are sorted and processed by it's order 
-    schemas = load_schema('schema')
+    schemas = load_schema(schema_folder)
     schema_order = sorted(schemas)
 
     for so in schema_order:
 
         # get schema by it's order
         schema = schemas[so]
+        schema_keys = format_schema(schema['fields'])        
 
         # map the datasets defined in gdata to the schema
         # the data need to insert to database are mapping to the 'fields' of schema
@@ -392,12 +522,12 @@ def main(argv):
         # if not duplicate, the dataset will be insert to database
         # otherwise, the datasets will be update
         #    so, the check schema is subset of schema, need to be defined later
-        
-        #if (schema['type'] == 'mRNA'):
-        #    sys.exit()
 
         # insert the mapping data to mongodb
-        insert_update(tdb, schema['collection'], schema['fields'], schema['fields'])
+        insert_update(tdb, schema['collection'], schema['fields'], schema_keys)
+
+        #if (schema['type'] == 'gene'):
+        #    sys.exit()
 
         # After insert, the schema['fields'] will contain objectID for each doc, that ID will be 
         # used in other document for creating relationshp. Because the schema will be updated in 
@@ -423,7 +553,8 @@ def main(argv):
         if (schema['type'] == 'mRNA'):
            sys.exit()
 
-    tdb.logout()
+    
+    '''
 
     # create search index for features 
     print('Start build search index')
@@ -447,7 +578,73 @@ def main(argv):
 
     #es.indices.refresh(index="feature")
     print(time.strftime( ISOTIMEFORMAT, time.localtime( time.time() ) ))
+    '''
+
+'''
+noschema_delete -- delete dataset from database
+'''
+def noschema_delete(tdb):
+	print("111")
+
+
+'''
+usage -- print usage information
+'''
+def usage():
+    print ("USAGE: %s data.yaml" % (sys.argv[0]))
+    sys.exit()
 
 
 if __name__ == '__main__':
-    main(sys.argv)
+
+    '''set default parameters'''
+    db_ip = '127.0.0.1'
+    db_port = 27017
+    db_name = 'noshcema'
+    mode = 'i'
+
+    data_yaml = 'gdata.yaml'
+    schema_folder = 'schema'
+    
+    try:
+        options,args = getopt.getopt(sys.argv[1:],"hp:i:m:d:y:s:", ["help","ip=","port=", "mode=", "database=", "yaml=", "schema="])
+    except getopt.GetoptError:
+        sys.exit()
+
+    ''' check required parameter '''
+    for name,value in options:
+        if name in ("-h","--help"):
+            usage()
+        if name in ("-i","--ip"):
+            db_op = value
+        if name in ("-p","--port"):
+            db_port = value
+        if name in ('-m', "--mode"):
+            mode = value
+        if name in ('-d', "--database"):
+            db_name = value
+        if name in ('-y', "--yaml"):
+            data_yaml = value
+        if name in ('-s', "--schema"):
+            schema_folder = value
+
+    ''' connect to database '''
+    connection = pymongo.MongoClient(db_ip, db_port, maxPoolSize=50)
+    tdb = connection[db_name]
+
+    '''manage the database according to the mode'''
+    if (mode == 'i'):
+        noschema_insert(tdb, data_yaml, schema_folder)
+    elif (mode == 'd'):
+    	dtype = 'organism'
+    	dname = 'feature'
+        # noschema_delete(tdb, dtype, dname)
+        # delete by organism name/id
+        # delete by analysis name/id
+            # delete by assembly/annotation
+            # delete by func annotation analysis id
+    else:
+        print("[ERR]Mode: %s" % mode)
+        sys.exit()
+
+    tdb.logout()
