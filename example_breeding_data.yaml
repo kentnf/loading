@@ -1,0 +1,18 @@
+#%YAML 1.2
+
+# This file define the parameters of load genomic data
+# 
+# Author: kentnf, kentnf at gmail dot com
+#
+# the field: indicate that fields is required
+# the value: file::value indicate the value is store in file
+
+
+project:
+  name: test plant breeding project 
+
+experiment:
+  name: phenotype experiment for test project
+  type: phenotype
+  output: xxx
+

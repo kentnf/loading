@@ -15,18 +15,20 @@ import time
 import json
 import pymongo
 from elasticsearch import Elasticsearch
+from bson import Binary, Code
+from bson.json_util import dumps
 
-from nschema import load_schema
-from nschema import format_schema
+from ns_schema import load_schema
+from ns_schema import format_schema
 
 # import modules for processing features, and functional annotation of features
-from ndocument import Document
+from ns.ndocument import Document
 
-from nfeature import gff3_to_feature
-from nsequence import sequence_to_attr
-from nxml import xml_to_attr
-from ntab import tab_to_attr
-from ngaf import gaf_to_attr
+from ns.nfeature import gff3_to_feature
+from ns.nsequence import sequence_to_attr
+from ns.nxml import xml_to_attr
+from ns.ntab import tab_to_attr
+from ns.ngaf import gaf_to_attr
 
 '''
 search_data -- traversing the value and retrieve the files
@@ -341,22 +343,57 @@ def convert_nest_query(query, query_format, char):
             query_format[newkey] = v
 
 '''
-sort_list --- sort list with nested dict
+es_replace_id -- replace the _id to id when build index for document on mongo
 '''
-#def sort_list()
+def es_replace_id(document):
 
+    if (isinstance(document, list)):
+        for item in document:
+            if (isinstance(item, (dict, list))):
+                es_replace_id(item)
+    else:
+        for k,v in document.items():
+            if (isinstance(v, (dict,list))):
+                es_replace_id(v)
+            else:
+                if (k == '_id'):
+                    document['id'] = v
+                    del document['_id']
 
 '''
-compare_list --- compare two list dataset
+es_index_insert --- insert index to ES
 '''
-#def compare_list(list1, list2):
+def es_index_insert(es, collection, type, doc):
+    doc_index = copy.deepcopy(doc)
+    es_replace_id(doc_index)
 
+    if (isinstance(doc_index, list)):
+        for item in doc_index:
+            res = es.index(index=collection, doc_type=type, id=item['id'], body=dumps(item))
+    elif (isinstance(doc_index, dict)):
+        res = es.index(index=collection, doc_type=type, id=doc['id'], body=dumps(doc_index))
+    else:
+    	''' document is not other type '''
+    	pass
 
+'''
+es_index_update --- update index to es
+'''
+def es_index_update(es, collection, type, id, new_doc):
+	doc_index = copy.deepcopy(new_doc)
+	es_replace_id(doc_index)
+	es.update(index=collection, doc_type=type, id=str(id), body=dumps(doc_index))
+
+'''
+es_index_delete --- delete index to es
+'''
+def es_index_delete(es, collection, type, id):
+	es.delete(index=collection, doc_type=type, id=str(id))
 
 '''
 insert_update -- insert/update mapped data to database 
 '''
-def insert_update(db_name, collection_name, data, query_keys):
+def insert_update(db_name, es, collection_name, data, query_keys):
 
     collection = db_name[collection_name]
     
@@ -378,18 +415,19 @@ def insert_update(db_name, collection_name, data, query_keys):
 
             ''' update method: replace '''
             collection.update_one(query_format, { "$set": data } )
+            es_index_update(es, collection_name, collection_name, _id, data)
+
             print("[INFO]replace single: %s" % str(data))
 
-            ''' update method: append '''
-            # print("[INFO]append single: %s" % str(data))
-
-            ''' add _id to document '''
+            ''' add _id to hash which used for other document '''
             data['_id'] = _id
             
         else:
+            ''' add doc to mongodb and ES '''
             _id = collection.insert_one(data)
-            # add _id to document
+            ''' add _id to hash which used for ES and other document '''
             data['_id'] = _id
+            es_index_insert(es, collection_name, collection_name, data)
             print("[INFO]Insert single: %s" % str(data))
 
     elif (isinstance(data, list)):
@@ -441,11 +479,13 @@ def insert_update(db_name, collection_name, data, query_keys):
                     else:
                         ''' 2. replace old doc with new doc '''
                         collection.find_one_and_replace( {'_id': doc_id }, ndoc)
+                        es_index_update(es, collection_name, doc_id, ndoc)
                         num_rep = num_rep + 1
                     del new_dict[name]
                 else:
                     ''' delete old document if not exist in new '''
                     collection.delete_one( {'_id': doc_id } )
+                    es_index_delete(es, collection_name, collection_name, doc_id)
                     num_del = num_del + 1
 
             ''' insert the new data in list '''
@@ -453,6 +493,7 @@ def insert_update(db_name, collection_name, data, query_keys):
                 ndoc = new_dict[name]
                 _id = collection.insert_one(ndoc)
                 ndoc['_id'] = _id
+                es_index_insert(es, collection_name, collection_name, ndoc)
                 data_with_id.append(ndoc)
                 num_ins = num_ins + 1
 
@@ -464,6 +505,7 @@ def insert_update(db_name, collection_name, data, query_keys):
             for i in range(len(data)):
                 data[i]['_id'] = _id[i]
                 # print(data[i]['name'],_id[i])
+            es_index_insert(es, collection_name, collection_name, data)
             print("[INFO]Insert %d documents" % len(data))
     else:
         pass
@@ -471,7 +513,7 @@ def insert_update(db_name, collection_name, data, query_keys):
 '''
 noschema_insert -- insert/update dataset to mongodb according to noschema schema
 '''
-def noschema_insert(tdb, data_yaml, schema_folder):
+def noschema_insert(tdb, es, data_yaml, schema_folder):
     
     # === parse data.yaml ===
     with open(data_yaml) as fd:
@@ -524,7 +566,7 @@ def noschema_insert(tdb, data_yaml, schema_folder):
         #    so, the check schema is subset of schema, need to be defined later
 
         # insert the mapping data to mongodb
-        insert_update(tdb, schema['collection'], schema['fields'], schema_keys)
+        insert_update(tdb, es, schema['collection'], schema['fields'], schema_keys)
 
         #if (schema['type'] == 'gene'):
         #    sys.exit()
@@ -555,9 +597,8 @@ def noschema_insert(tdb, data_yaml, schema_folder):
 
     
     '''
-
-    # create search index for features 
-    print('Start build search index')
+    create search index for features 
+    
     es = Elasticsearch()
 
     for i in range(len(feature_raw)):
@@ -603,8 +644,8 @@ if __name__ == '__main__':
     db_name = 'noshcema'
     mode = 'i'
 
-    data_yaml = 'gdata.yaml'
-    schema_folder = 'schema'
+    data_yaml = 'exmaple_genomic_data.yaml'
+    schema_folder = 'schema_genomic'
     
     try:
         options,args = getopt.getopt(sys.argv[1:],"hp:i:m:d:y:s:", ["help","ip=","port=", "mode=", "database=", "yaml=", "schema="])
@@ -632,9 +673,12 @@ if __name__ == '__main__':
     connection = pymongo.MongoClient(db_ip, db_port, maxPoolSize=50)
     tdb = connection[db_name]
 
+    ''' connect to ES service '''
+    es = Elasticsearch()
+
     '''manage the database according to the mode'''
     if (mode == 'i'):
-        noschema_insert(tdb, data_yaml, schema_folder)
+        noschema_insert(tdb, es, data_yaml, schema_folder)
     elif (mode == 'd'):
     	dtype = 'organism'
     	dname = 'feature'
